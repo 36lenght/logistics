@@ -1,20 +1,20 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Home from '../views/Home.vue'
-import Ol from '../views/openlayers.vue'
 import Ol2 from '../views/openlayers2.vue'
+import Ol4 from '../views/openlayers4.vue'
 Vue.use(VueRouter)
 
 const routes = [
   {
+    path: '/ol4',
+    name: 'Openlayers4',
+    component: Ol4
+  },
+  {
     path: '/ol2',
     name: 'Openlayers2',
     component: Ol2
-  },
-  {
-    path: '/ol',
-    name: 'Openlayers',
-    component: Ol
   },
   {
     path: '/',

@@ -2,6 +2,10 @@
   <div>
     <div id="map" class="map">
       <div id="mouse-position" class="mouse-position"></div>
+      <div id="popup" class="ol-popup">
+        <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+        <div id="popup-content"></div>
+      </div>
     </div>
     <button id="out" @click="zoom_out()">zoom-out</button>
     <button id="in" @click="zoom_in()">zoom-in</button>
@@ -10,7 +14,7 @@
       <span>当前层级：{{ zoom }}</span>
     </div>
     <div>
-      <button>添加图片标注</button>
+      <button @click="Addmarker()">添加图片标注</button>
     </div>
   </div>
 </template>
@@ -22,7 +26,8 @@ export default {
     return {
       map: null,
       view: null,
-      zoom: 3,
+      zoom: 15,
+      addVectorLabel: null,
     };
   },
   methods: {
@@ -61,9 +66,19 @@ export default {
         duration: 2500,
       });
     },
+    Addmarker() {
+      // 为地图容器添加单击事件监听
+      let a = this.map.on("click", (evt) => {
+        // 鼠标单击点坐标
+        var point = evt.coordinate;
+        // 添加一个新的标注
+        this.addVectorLabel(point);
+        ol.Observable.unByKey(a);
+      });
+    },
   },
   mounted() {
-    var beijing = ol.proj.fromLonLat([116.28, 39.54]);
+    var beijing = ol.proj.fromLonLat([116.3915, 39.907]);
     //  ol.View对象表示地图的简单2D视图
     this.view = new ol.View({
       // 设置地图初始中心
@@ -121,12 +136,20 @@ export default {
     var createLabelStyle = (feature) =>
       new ol.style.Style({
         image: new ol.style.Icon({
-          src: "./../assets/image/opsition.png",
+          anchor: [0.5, 0.5],
+          anchorOrigin: "top-right",
+          // offset:[0,10],
+          //图标缩放比例
+          // scale:0.5,
+          //透明度
+          opacity: 1,
+          src: "https://www.easyicon.net/api/resizeApi.php?id=1192128&size=16",
         }),
       });
     //  实例化 Vector 要素，通过矢量图层添加到地图容器中
+    var tiananmen = ol.proj.fromLonLat([116.3915, 39.907]);
     var iconFeature = new ol.Feature({
-      geometry: new ol.geom.Point(beijing),
+      geometry: new ol.geom.Point(tiananmen),
     });
     // 矢量标注的数据源
     var vectorSource = new ol.source.Vector({
@@ -136,20 +159,50 @@ export default {
     var vectorLayer = new ol.layer.Vector({
       source: vectorSource,
     });
-    // 实例化 overlay 标注，添加到地图容器中
-    // 为地图容器添加单击事件监听
-    () => {
-      this.map.on("click", (evt) => {
-        alert("你点击了一下地图");
-        // 鼠标单击点坐标
-        var point = evt.coordinate;
-        // 添加一个新的标注
-        addVectorLabel(point);
+    // 添加一个新的标注(矢量要素)
+    this.addVectorLabel = (coordinate) => {
+      // 创建一个要素 ol.feature
+      var newFeature = new ol.Feature({
+        //几何信息
+        geometry: new ol.geom.Point(coordinate),
       });
+      // 设置要素的样式
+      newFeature.setStyle(createLabelStyle(newFeature));
+      // 将新要素添加到数据源中
+      vectorSource.addFeature(newFeature);
     };
     iconFeature.setStyle(createLabelStyle(iconFeature));
     //  添加到 map 层
     this.map.addLayer(vectorLayer);
+    // 示例标注点北京市的信息对象
+    var featureInfo = {
+      geo: tiananmen,
+      att: {
+        // 标题内容
+        title: "天安门",
+        // 标题详细链接
+        titleURL:
+          "https://baike.baidu.com/item/%E5%A4%A9%E5%AE%89%E9%97%A8/63708?fr=aladdin",
+        // 标注内容简介
+        text:
+          "天安门，坐落在中华人民共和国首都北京市的中心、故宫的南端，与天安门广场以及人民英雄纪念碑、毛主席纪念堂、人民大会堂、中国国家博物馆隔长安街相望，占地面积4800平方米，以杰出的建筑艺术和特殊的政治地位为世人所瞩目。",
+        // 标注的图片
+        src:
+          "https://ss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=1551037887,1372770525&fm=26&gp=0.jpg",
+      },
+    };
+    // 实现popup的html元素
+    var container = document.getElementById("popup");
+    var content = document.getElementById("popup");
+    var closer = document.getElementById("popup-closer");
+    // 在地图容器中创建一个Overlay
+    var popup = new ol.Overlay({
+      // 要转换成overlay 的 HTML元素
+      element: container,
+      // 当前窗口可见
+      autoPan: true,
+    });
+    this.map.addOverlay(popup);
   },
 };
 </script>

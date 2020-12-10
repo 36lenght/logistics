@@ -5,7 +5,6 @@ import store from './store'
 import ol from 'openlayers'
 Vue.config.productionTip = false
 Vue.prototype.ol=ol
-
 new Vue({
   router,
   store,
