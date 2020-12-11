@@ -1,6 +1,7 @@
 <template>
   <div>
     <div id="map" class="map"></div>
+    <button @click="Addmarker()">添加图片标注</button>
   </div>
 </template>
 <script>
@@ -13,7 +14,19 @@ export default {
       addVectorLabel: null,
     };
   },
-  methods: {},
+  methods: {
+    Addmarker() {
+      // 为地图添加单击监听事件
+      let a = this.map.on("click", (evt) => {
+        // 鼠标单击点坐标
+        var point = evt.coordinate;
+        // 添加一个新的标注
+        this.addVectorLabel(point);
+        // 移除监听事件
+        this.ol.Observable.unByKey(a);
+      });
+    },
+  },
   mounted() {
     // ol.View对象，表示地图的视图
     this.view = new this.ol.View({
@@ -39,8 +52,10 @@ export default {
     var createLabelStyle = (feature) =>
       new this.ol.style.Style({
         image: new this.ol.style.Icon({
-          anchor: [0.5, 0.5],
-          anchorOrigin: "top-right",
+          // 图标中心
+          anchor: [0.5, 1],
+          // 标注样式的起点位置
+          // anchorOrigin: "top-right",
           // offset:[0,10],
           //图标缩放比例
           // scale:0.5,
@@ -61,6 +76,18 @@ export default {
     var vectorLayer = new this.ol.layer.Vector({
       source: vectorSource,
     });
+    // 添加一个新的标注
+    this.addVectorLabel = (coordinate) => {
+      // 创建一个要素 ol.feater
+      var newFeature = new this.ol.Feature({
+        // 几何信息
+        geometry: new this.ol.geom.Point(coordinate),
+      });
+      // 设置要素的样式
+      newFeature.setStyle(createLabelStyle(newFeature));
+      // 将新要素添加到数据源中
+      vectorSource.addFeature(newFeature);
+    };
     iconFeature.setStyle(createLabelStyle(iconFeature));
     //  添加到map层
     this.map.addLayer(vectorLayer);

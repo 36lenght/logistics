@@ -73,6 +73,7 @@ export default {
         var point = evt.coordinate;
         // 添加一个新的标注
         this.addVectorLabel(point);
+        // 移除监听事件
         ol.Observable.unByKey(a);
       });
     },
@@ -123,7 +124,11 @@ export default {
         new ol.layer.Tile({
           // 以显示 ol.source.OSM OSM数据并将其呈现给ID为的DOM元素map
           // ol.source.OSM是OpenStreetMap切片服务器的图层源。
-          source: new ol.source.OSM(),
+          // source: new ol.source.OSM(),
+          source: new ol.source.XYZ({
+            url:
+              "http://map.geoq.cn/ArcGIS/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}",
+          }),
         }),
       ],
       // 地图的容器，元素本身 或 id元素
@@ -133,11 +138,11 @@ export default {
     // 获取与此地图相关的视图,获取当前缩放级别
     this.zoom = this.map.getView().getZoom();
     // 创建矢量标注样式函数，设置 image 为图标  ol.style.Icon
-    var createLabelStyle = (feature) =>
-      new ol.style.Style({
+    var createLabelStyle = (feature) => {
+      return new ol.style.Style({
         image: new ol.style.Icon({
-          anchor: [0.5, 0.5],
-          anchorOrigin: "top-right",
+          anchor: [0.5, 1.3],
+          // anchorOrigin: "top-right",
           // offset:[0,10],
           //图标缩放比例
           // scale:0.5,
@@ -145,12 +150,25 @@ export default {
           opacity: 1,
           src: "https://www.easyicon.net/api/resizeApi.php?id=1192128&size=16",
         }),
+        text: new ol.style.Text({
+          // 文字样式
+          font: "normal 14px 微软雅黑",
+          // 文本内容
+          text: feature.get("name"),
+          // 文本填充样式
+          fill: new ol.style.Fill({ color: "#aa3300" }),
+          stroke: new ol.style.Stroke({ color: "#ffcc33", width: 2 }),
+        }),
       });
+    };
     //  实例化 Vector 要素，通过矢量图层添加到地图容器中
     var tiananmen = ol.proj.fromLonLat([116.3915, 39.907]);
     var iconFeature = new ol.Feature({
       geometry: new ol.geom.Point(tiananmen),
+      // 名称属性
+      name: "天安门",
     });
+    iconFeature.setStyle(createLabelStyle(iconFeature));
     // 矢量标注的数据源
     var vectorSource = new ol.source.Vector({
       features: [iconFeature],
@@ -171,38 +189,10 @@ export default {
       // 将新要素添加到数据源中
       vectorSource.addFeature(newFeature);
     };
-    iconFeature.setStyle(createLabelStyle(iconFeature));
+
     //  添加到 map 层
     this.map.addLayer(vectorLayer);
-    // 示例标注点北京市的信息对象
-    var featureInfo = {
-      geo: tiananmen,
-      att: {
-        // 标题内容
-        title: "天安门",
-        // 标题详细链接
-        titleURL:
-          "https://baike.baidu.com/item/%E5%A4%A9%E5%AE%89%E9%97%A8/63708?fr=aladdin",
-        // 标注内容简介
-        text:
-          "天安门，坐落在中华人民共和国首都北京市的中心、故宫的南端，与天安门广场以及人民英雄纪念碑、毛主席纪念堂、人民大会堂、中国国家博物馆隔长安街相望，占地面积4800平方米，以杰出的建筑艺术和特殊的政治地位为世人所瞩目。",
-        // 标注的图片
-        src:
-          "https://ss0.bdstatic.com/70cFvHSh_Q1YnxGkpoWK1HF6hhy/it/u=1551037887,1372770525&fm=26&gp=0.jpg",
-      },
-    };
-    // 实现popup的html元素
-    var container = document.getElementById("popup");
-    var content = document.getElementById("popup");
-    var closer = document.getElementById("popup-closer");
-    // 在地图容器中创建一个Overlay
-    var popup = new ol.Overlay({
-      // 要转换成overlay 的 HTML元素
-      element: container,
-      // 当前窗口可见
-      autoPan: true,
-    });
-    this.map.addOverlay(popup);
+    //
   },
 };
 </script>
